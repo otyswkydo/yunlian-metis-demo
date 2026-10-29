@@ -23,29 +23,29 @@ The site runs on WordPress with the [Astra](https://wpastra.com/) theme. The 5 p
 I did this part together with the heritage association's site, and the details are in [that project's README](https://github.com/otyswkydo/yunlian-legacy-demo#readme). In short:
 
 - After testing, the site went live in September 2025 on the same cloud server as the heritage association's site, managed with 1Panel and Docker, with HTTPS through Cloudflare.
-- When the server expired in August 2026, I recovered all three sites on that server from a 7.5 GB snapshot into Docker on my Mac. METIS was one of them.
+- When the server expired in August 2026, I kept a 7.5 GB snapshot of it and ran the recovery script Claude wrote on my own Mac, bringing all three sites back into Docker on my Mac. METIS was one of them.
 
 ## Turning it into a static site
 
-The heritage association's site was exported first, so I thought METIS would just need the same scripts run again. It turned out those scripts were written around a different site: that one uses the Blocksy theme and has a shop and a cart, while METIS uses Astra and only has a contact form. So most of the work this time was finding what only fit the other site, and changing it so it works for both.
+The heritage association's site was exported first. I wanted to export METIS with the same scripts, so I first had Claude check whether they could be used as they were. The check showed those scripts were written around a different site: that one uses the Blocksy theme and has a shop and a cart, while METIS uses Astra and only has a contact form. So most of the work this time was finding what only fit the other site, and changing it so it works for both.
 
 The result:
 
 - 5 pages in each language plus a "page not found" page: 11 web pages, 164 files, 25 MB.
-- Every page has an EN / 中文 switch in the header. The translations live in one lookup file with 57 entries: 51 translations (about 3,090 Chinese characters into about 1,880 English words), plus 6 entries that remove duplicate headings from the English version (see problem 2 below). Claude wrote the first draft of the translation, and I reviewed it.
-- The contact form looks the same as before. Pressing Submit shows a message saying forms can't be submitted on the static demo.
-- Before exporting, I removed a course sign-up section on the home page that was no longer needed.
+- Every page has an EN / 中文 switch in the header. The translations live in one lookup file with 57 entries: 51 translations (about 3,090 Chinese characters into about 1,880 English words), plus 6 entries that remove duplicate headings from the English version (see problem 2 below). I had Claude do the translation.
+- The contact form looks the same as before. Pressing Submit shows a message saying forms can't be submitted on the static demo. Claude tested it in the browser, and submitting doesn't send any request.
+- While browsing the preview, I noticed a course sign-up section on the home page that was no longer needed and decided to remove it before exporting. Claude removed it in WordPress (see problem 3 below).
 - I had Claude write a link checker that starts from the home page and opens every link: 69 URLs and 330 link references, 0 broken.
 
 ## Problems I ran into
 
 ### 1. The same page saved twice
 
-**The problem:** After the first export, next to `about/index.html` there was also an `about.html`. The same happened for `academics`, `activities` and `contact`, so there were 4 extra copies of pages.
+**The problem:** After Claude's first export, it found that next to `about/index.html` there was also an `about.html`. The same happened for `academics`, `activities` and `contact`, so there were 4 extra copies of pages.
 
-**What I found:** A few buttons on the home page linked to `href="about"`, without a `/` at the end. On the live site, WordPress quietly redirected `about` to `about/`, so visitors never noticed. But the export tool saw two different addresses and saved the same page twice.
+**What I found:** Claude found that a few buttons on the home page linked to `href="about"`, without a `/` at the end. On the live site, WordPress quietly redirected `about` to `about/`, so visitors never noticed. But the export tool saw two different addresses and saved the same page twice.
 
-**After the fix:** I had Claude change the export so that internal links like this get the missing `/` added. Before, the Chinese version had 10 page files, 4 of them duplicates. After, there are 6, one for each page.
+**After the fix:** Claude suggested a fix, and after I approved it, I had Claude change the export so that internal links like this get the missing `/` added. Before, the Chinese version had 10 page files, 4 of them duplicates. After, there are 6, one for each page.
 
 **What I learned:** Things that look the same to a person aren't always the same to a program. `about` and `about/` differ by one character, and to a program they are two different addresses.
 
@@ -53,13 +53,13 @@ The result:
 
 **The problem:** In the course section on the home page, every course has a Chinese title with the English title on the next line, like "计算机科学" above "Computer Science". If the English version translated the Chinese title too, it would show "Computer Science" twice.
 
-**What I found:** On the page, the Chinese and English titles are two separate pieces of text, so the translation step only sees "计算机科学" and doesn't know the English is already there. I had Claude check what comes right after each short title, and found 6 of them: Humanities, Mathematics, Science, Computer Science, Languages and Fine Arts.
+**What I found:** On the page, the Chinese and English titles are two separate pieces of text, so the translation step only sees "计算机科学" and doesn't know the English is already there. Before translating, Claude checked what comes right after each short title, and found 6 of them: Humanities, Mathematics, Science, Computer Science, Languages and Fine Arts.
 
-There was also a line, "📍 地址：123 Example Street, Toronto…" (a made-up address here), that never got translated. The program saw mostly English letters and only a few Chinese characters, decided it was already English, and left it off the "still to translate" list.
+There was also a line, "📍 地址：123 Example Street, Toronto…" (a made-up address here), that never got translated. Claude spotted it while checking each English page after the export. The program saw mostly English letters and only a few Chinese characters, decided it was already English, and left it off the "still to translate" list.
 
-**After the fix:** In the lookup file, a translation of `-` means "remove this from the English version". I used that for the 6 titles. Before, each course had two title lines in English; after, only the original English one is left. I also added the address line to the file by hand. In the end, the 5 English pages contain no Chinese at all, except the word "中文" on the language switch.
+**After the fix:** In the lookup file, a translation of `-` means "remove this from the English version". Claude used that for the 6 titles. Before, each course had two title lines in English; after, only the original English one is left. Claude also added the address line to the file by hand. In the end, the 5 English pages contain no Chinese at all, except the word "中文" on the language switch.
 
-**What I learned:** "The program says everything is translated" doesn't mean everything is translated. I still have to read the whole page myself and look for what was missed.
+**What I learned:** "The program says everything is translated" doesn't mean everything is translated. The whole page still has to be checked again for anything that was missed.
 
 ### 3. Deleting one section almost broke the colours on the page
 
@@ -78,7 +78,7 @@ After:  var(u002du002dast-global-color-5)     the backslashes are gone, just pla
 
 Why did the backslashes disappear? WordPress has a habit when it saves content: it first removes one layer of backslashes from the text. When you click Save in the admin editor, the editor knows about this and adds an extra backslash in front of each one beforehand, so after one layer is removed, the original is still there. This time the content was saved directly from a command, with no extra backslash added, so the one that had to stay got removed too.
 
-**After the fix:** We restored the database from the backup taken just before, then deleted the section again the right way, adding that extra layer before saving. Before the fix, all 26 colour settings on the home page were broken. After, 4 of them were gone along with the removed section, and the other 22 were intact. A character-by-character comparison confirmed that the only difference from the original was the removed section.
+**After the fix:** Claude restored the database from the backup taken just before, then deleted the section again the right way, adding that extra layer before saving. Before the fix, all 26 colour settings on the home page were broken. After, 4 of them were gone along with the removed section, and the other 22 were intact. A character-by-character comparison confirmed that the only difference from the original was the removed section.
 
 **What I learned:** Back up before changing data. And after a change, don't just check that there was no error. Check that it changed only what I meant to change. Those two steps are why this problem never made it into the exported site.
 
@@ -93,9 +93,9 @@ Why did the backslashes disappear? WordPress has a habit when it saves content: 
 - The publish script always created the GitHub repository with the description "加中非遗文化传承协会 · 静态演示站" (the heritage association's name).
 - The export always fetched the cart and checkout pages. METIS doesn't have them, so every export logged 3 "not found" errors.
 
-There was also a 404 error in the browser console. A script that shows emoji only loads while the page is running, so the export tool never found it.
+While testing in the browser, Claude also found a 404 error in the console. A script that shows emoji only loads while the page is running, so the export tool never found it.
 
-**After the fix:** I had Claude make all of these depend on the site. Sites using Astra get the language switch too, sites without a shop say forms can't be submitted, the repository description and folder notes are set per site, cart pages are only fetched for sites with a shop, and the emoji script is exported as well. Before, exporting METIS gave 3 fetch errors and 1 console 404. After, both are 0. The heritage site works the same as before.
+**After the fix:** Claude listed its proposed fixes. I approved all of them, and added that it didn't need to copy the heritage site's approach exactly, since they're different sites. Then I had Claude make all of these depend on the site. Sites using Astra get the language switch too, sites without a shop say forms can't be submitted, the repository description and folder notes are set per site, cart pages are only fetched for sites with a shop, and the emoji script is exported as well. Before, exporting METIS gave 3 fetch errors and 1 console 404. After, both are 0. The heritage site works the same as before.
 
 **What I learned:** Being able to reuse code doesn't mean you can copy it as is. Before using it somewhere new, look at what situation it was originally written for.
 
@@ -105,10 +105,14 @@ There was also a 404 error in the browser console. A script that shows emoji onl
 - Server (while it was live): Ubuntu, 1Panel, Docker, Cloudflare
 - Recovery and export: Docker on OrbStack, WP-CLI, Bash, wget, Perl, PHP
 - English version: a Chinese–English lookup file; the export builds the English pages under `/en/`
-- Testing: a link checker (Python), plus manual testing in the browser on desktop and mobile
+- Testing: a link checker (Python), plus testing in the browser on desktop and mobile
 - Publishing: Git, GitHub CLI, GitHub Pages
 
-I set up the server myself, and built the website by starting from an Astra template and then replacing the content and adjusting the layout. The scripts and code for recovery, export, translation and testing were written by Claude at my request. I decided what to build, ran everything on my Mac, checked the results in the browser, and reported back whatever I found.
+## What I did and what Claude did
+
+- What I did: set up the server; built the website starting from an Astra template, replaced the content, adjusted the layout and put it online; kept a full snapshot when the server expired; ran the recovery script Claude wrote on my own Mac; browsed the local preview and noticed the course section on the home page that was no longer needed.
+- What I had Claude do: Claude wrote the recovery script, the export scripts, the link checker and the rest of the code. For this archive, Claude also ran the export, the link and privacy checks, the English translation and the browser tests, and removed the course section in WordPress.
+- What I decided and approved: the repository name, keeping the contact email, making an English version, removing the course section, whether to go ahead with the fixes Claude proposed, and how each folder is described on GitHub. At every step I looked at Claude's results and confirmed them before moving on, and I ran the final publish command myself.
 
 ## Credits
 
